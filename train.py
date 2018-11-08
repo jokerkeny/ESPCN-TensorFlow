@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import argparse
 from datetime import datetime
 import os
@@ -93,10 +93,10 @@ def train():
     try:
         steps, start_average, end_average = 0, 0, 0
         start_time = time.time()
-        for ep in xrange(1, args.epochs + 1):
+        for ep in range(1, args.epochs + 1):
             batch_idxs = len(lr_images) // args.batch_size
             batch_average = 0
-            for idx in xrange(0, batch_idxs):
+            for idx in range(0, batch_idxs):
                 # On the fly batch generation instead of Queue to optimize GPU usage
                 batch_images = lr_images[idx * args.batch_size : (idx + 1) * args.batch_size]
                 batch_labels = hr_labels[idx * args.batch_size : (idx + 1) * args.batch_size]

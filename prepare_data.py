@@ -35,8 +35,8 @@ def my_anti_shuffle(input_image, ratio):
     if ori_height % ratio != 0 or ori_width % ratio != 0:
         print("Error! Height and width must be divided by ratio!")
         return
-    height = ori_height / ratio
-    width = ori_width / ratio
+    height = ori_height // ratio
+    width = ori_width // ratio
     channels = ori_channels * ratio * ratio
     anti_shuffle = np.zeros((height, width, channels), dtype=np.uint8)
     for c in range(0, ori_channels):
@@ -49,12 +49,12 @@ def shuffle(input_image, ratio):
     shape = input_image.shape
     height = int(shape[0]) * ratio
     width = int(shape[1]) * ratio
-    channels = int(shape[2]) / ratio / ratio
+    channels = int(shape[2]) // ratio // ratio
     shuffled = np.zeros((height, width, channels), dtype=np.uint8)
     for i in range(0, height):
         for j in range(0, width):
             for k in range(0, channels):
-                shuffled[i,j,k] = input_image[i / ratio, j / ratio, k * ratio * ratio + (i % ratio) * ratio + (j % ratio)]
+                shuffled[i,j,k] = input_image[i // ratio, j // ratio, k * ratio * ratio + (i % ratio) * ratio + (j % ratio)]
     return shuffled
 
 def prepare_images(params):
@@ -89,11 +89,11 @@ def prepare_images(params):
 
             height = hr_image.shape[0]
             width = hr_image.shape[1]
-            vertical_number = height / hr_stride - 1
-            horizontal_number = width / hr_stride - 1
+            vertical_number = height // hr_stride - 1
+            horizontal_number = width // hr_stride - 1
             image_num = image_num + 1
             if image_num % 10 == 0:
-                print "Finished image: {}".format(image_num)
+                print("Finished image: {}".format(image_num))
             if image_num > training_num and image_num <= training_num + params['validation_num']:
                 folder = params['validation_image_dir'].format(ratio)
             elif image_num > training_num + params['validation_num']:
@@ -126,12 +126,12 @@ def prepare_data(params):
     ratio, lr_size, edge = params['ratio'], params['lr_size'], params['edge']
     image_dirs = [d.format(ratio) for d in [params['training_image_dir'], params['validation_image_dir'], params['test_image_dir']]]
     data_dirs = [d.format(ratio) for d in [params['training_dir'], params['validation_dir'], params['test_dir']]]
-    hr_start_idx = ratio * edge / 2
+    hr_start_idx = ratio * edge // 2
     hr_end_idx = hr_start_idx + (lr_size - edge) * ratio
     sub_hr_size = (lr_size - edge) * ratio
     for dir_idx, image_dir in enumerate(image_dirs):
         data_dir = data_dirs[dir_idx]
-        print "Creating {}".format(data_dir)
+        print("Creating {}".format(data_dir))
         for root, dirnames, filenames in os.walk(image_dir + "/lr"):
             for filename in filenames:
                 lr_path = os.path.join(root, filename)
@@ -159,14 +159,14 @@ if __name__ == '__main__':
     with open("./params.json", 'r') as f:
         params = json.load(f)
 
-    print "Preparing images with scaling ratio: {}".format(params['ratio'])
-    print "If you want a different ratio change 'ratio' in params.json"
-    print "Splitting images (1/3)"
+    print("Preparing images with scaling ratio: {}".format(params['ratio']))
+    print("If you want a different ratio change 'ratio' in params.json")
+    print("Splitting images (1/3)")
     prepare_images(params)
 
-    print "Preparing data, this may take a while (2/3)"
+    print("Preparing data, this may take a while (2/3)")
     prepare_data(params)
 
-    print "Cleaning up split images (3/3)"
+    print("Cleaning up split images (3/3)")
     remove_images(params)
-    print "Done, you can now train the model!"
+    print("Done, you can now train the model!")

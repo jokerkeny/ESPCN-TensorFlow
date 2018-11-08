@@ -78,7 +78,7 @@ def generate():
                                     params['ratio'] * np.array(lr_image_data.shape[0:2]),
                                     'bicubic')
 
-    edge = params['edge'] * params['ratio'] / 2
+    edge = params['edge'] * params['ratio'] // 2
 
     sr_image_ycbcr_data = np.concatenate((sr_image_y_data, sr_image_ycbcr_data[edge:-edge,edge:-edge,1:3]), axis=2)
     sr_image_data = ycbcr2rgb(sr_image_ycbcr_data)
@@ -88,14 +88,14 @@ def generate():
     if args.hr_image != None:
         hr_image_data = misc.imread(args.hr_image)
         model_psnr = psnr(hr_image_data, sr_image_data, edge)
-        print('PSNR of the model: {:.2f}dB'.format(model_psnr))
+        print(('PSNR of the model: {:.2f}dB'.format(model_psnr)))
 
         sr_image_bicubic_data = misc.imresize(lr_image_data,
                                         params['ratio'] * np.array(lr_image_data.shape[0:2]),
                                         'bicubic')
         misc.imsave(args.out_path + '_bicubic.png', sr_image_bicubic_data)
         bicubic_psnr = psnr(hr_image_data, sr_image_bicubic_data, 0)
-        print('PSNR of Bicubic: {:.2f}dB'.format(bicubic_psnr))
+        print(('PSNR of Bicubic: {:.2f}dB'.format(bicubic_psnr)))
 
 
 if __name__ == '__main__':

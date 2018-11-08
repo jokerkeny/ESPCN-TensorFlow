@@ -55,7 +55,7 @@ def generate():
     loss, images, labels = net.build_model()
 
     files = [f for f in os.listdir(args.lr_image_dir) if os.path.isfile(os.path.join(args.lr_image_dir, f))]
-
+    files.sort()
     saver = tf.train.Saver()
     if net.load(sess, saver, args.checkpoint):
         print("[*] Checkpoint load success!")
@@ -63,17 +63,17 @@ def generate():
         print("[*] Checkpoint load failed/no checkpoint found")
         return
 
-    frame_range = (87, 10000)
+    frame_range = (0, 5000)
 
     for fileName in files:
         try:
             ts = time()
-            frame_cnt = int(fileName[5:10])
+            frame_cnt = int(fileName[4:8])
             if frame_cnt < frame_range[0] or frame_cnt > frame_range[1]:
-                print 'Ignoring frame ' + str(frame_cnt)
+                print('Ignoring frame ' + str(frame_cnt))
                 continue
             else:
-                print 'start sr for frame ' + str(frame_cnt)
+                print('start sr for frame ' + str(frame_cnt))
 
             input_file = os.path.join(args.lr_image_dir, fileName)
             output_file = os.path.join(args.out_path_dir, fileName)
@@ -86,17 +86,17 @@ def generate():
             lr_image_cr_data = lr_image_ycbcr_data[:, :, 2:3]
             lr_image_batch = np.zeros((1,) + lr_image_y_data.shape)
             lr_image_batch[0] = lr_image_y_data
-            print 'preprocessed %d ms' % ((time()-ts)*1000)
+            print('preprocessed %d ms' % ((time()-ts)*1000))
             ts = time()
 
             sr_image = net.generate(lr_image)
-            print 'network generated %d ms' % ((time()-ts)*1000)
+            print('network generated %d ms' % ((time()-ts)*1000))
             ts = time()
 
 
             sr_image_y_data = sess.run(sr_image, feed_dict={lr_image: lr_image_batch})
 
-            print 'run %d ms' % ((time()-ts)*1000)
+            print('run %d ms' % ((time()-ts)*1000))
             ts = time()
 
             sr_image_y_data = shuffle(sr_image_y_data[0], args.ratio)
@@ -104,25 +104,25 @@ def generate():
                                             params['ratio'] * np.array(lr_image_data.shape[0:2]),
                                             'bicubic')
 
-            edge = params['edge'] * params['ratio'] / 2
+            edge = params['edge'] * params['ratio'] // 2
 
             sr_image_ycbcr_data = np.concatenate((sr_image_y_data, sr_image_ycbcr_data[edge:-edge,edge:-edge,1:3]), axis=2)
-            print 'mixed %d ms' % ((time()-ts)*1000)
+            print('mixed %d ms' % ((time()-ts)*1000))
             ts = time()
             sr_image_data = ycbcr2rgb(sr_image_ycbcr_data)
             #sr_image_data = sr_image_ycbcr_data
-            print 'converted %d ms' % ((time()-ts)*1000)
+            print('converted %d ms' % ((time()-ts)*1000))
             ts = time()
 
             misc.imsave(output_file, sr_image_data)
-            print output_file + ' generated %d ms' % ((time()-ts)*1000)
+            print(output_file + ' generated %d ms' % ((time()-ts)*1000))
             ts = time()
 
             if args.hr_image_dir != None:
                 hr_image_path = os.path.join(args.hr_image_dir, fileName)
                 hr_image_data = misc.imread(hr_image_path)
                 model_psnr = psnr(hr_image_data, sr_image_data, edge)
-                print('PSNR of the model: {:.2f}dB'.format(model_psnr))
+                print(('PSNR of the model: {:.2f}dB'.format(model_psnr)))
 
                 sr_image_bicubic_data = misc.imresize(lr_image_data,
                                                 params['ratio'] * np.array(lr_image_data.shape[0:2]),
@@ -130,13 +130,13 @@ def generate():
                 bicubic_path = os.path.join(args.out_path_dir, fileName + '_bicubic.png')
                 misc.imsave(bicubic_path, sr_image_bicubic_data)
                 bicubic_psnr = psnr(hr_image_data, sr_image_bicubic_data, 0)
-                print('PSNR of Bicubic: {:.2f}dB'.format(bicubic_psnr))
+                print(('PSNR of Bicubic: {:.2f}dB'.format(bicubic_psnr)))
         except IndexError:
-            print 'Index error caught'
+            print('Index error caught')
         except IOError:
-            print 'Cannot identify image file: ' + fileName
+            print('Cannot identify image file: ' + fileName)
         except ValueError:
-            print 'Cannot parse file name: ' + fileName
+            print('Cannot parse file name: ' + fileName)
 
 
 
